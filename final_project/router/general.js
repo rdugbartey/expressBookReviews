@@ -57,14 +57,46 @@ public_users.get('/', async function (req, res) {
     }
 });
 
-// Get book details based on ISBN
-public_users.get('/isbn/:isbn',function (req, res) {
-   const isbn = req.params.isbn;
-   if (books[isbn]) {
-       return res.json(books[isbn]);
-   }
-  return res.status(404).json({message: "Book not found"});
- });
+// Internal endpoint for retrieving a book by ISBN
+public_users.get('/books/isbn/:isbn', function (req, res) {
+
+    const isbn = req.params.isbn;
+
+    if (books[isbn]) {
+        return res.json(books[isbn]);
+    }
+
+    return res.status(404).json({
+        message: "Book not found"
+    });
+});
+
+// Get book details based on ISBN using Axios and Promise
+public_users.get('/isbn/:isbn', function (req, res) {
+
+    const isbn = req.params.isbn;
+
+    axios.get(`http://localhost:5001/books/isbn/${isbn}`)
+        .then(response => {
+
+            res.json(response.data);
+
+        })
+        .catch(error => {
+
+            if (error.response && error.response.status === 404) {
+                return res.status(404).json({
+                    message: "Book not found"
+                });
+            }
+
+            return res.status(500).json({
+                message: "Error retrieving book",
+                error: error.message
+            });
+
+        });
+});
   
 // Get book details based on author
 public_users.get('/author/:author',function (req, res) {
