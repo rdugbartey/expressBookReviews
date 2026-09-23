@@ -142,18 +142,49 @@ public_users.get('/author/:author', function (req, res) {
         });
 });
 
-// Get all books based on title
-public_users.get('/title/:title',function (req, res) {
-  const title = req.params.title;
-  const result = Object.values(books).filter(
+// Internal endpoint for retrieving books by title
+public_users.get('/books/title/:title', function (req, res) {
+
+    const title = req.params.title;
+
+    const result = Object.values(books).filter(
         book => book.title.toLowerCase() === title.toLowerCase()
     );
 
     if (result.length > 0) {
         return res.json(result);
     }
-  return res.status(404).json({
+
+    return res.status(404).json({
         message: "Book not found"
+    });
+});
+
+// Get all books based on title using Axios and Promise
+public_users.get('/title/:title', function (req, res) {
+
+    const title = req.params.title;
+
+    axios.get(
+        `http://localhost:5001/books/title/${encodeURIComponent(title)}`
+    )
+    .then(response => {
+
+        res.json(response.data);
+
+    })
+    .catch(error => {
+
+        if (error.response && error.response.status === 404) {
+            return res.status(404).json({
+                message: "Book not found"
+            });
+        }
+
+        return res.status(500).json({
+            message: "Error retrieving books",
+            error: error.message
+        });
     });
 });
 
